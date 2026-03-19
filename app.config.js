@@ -1,4 +1,6 @@
 const { withAndroidManifest } = require('@expo/config-plugins');
+const googleMapsApiKey =
+  process.env.EXPO_PUBLIC_GOOGLE_MAP_API ?? process.env.GOOGLE_MAP_API ?? '';
 
 function withGoogleMapsApiKey(config) {
   return withAndroidManifest(config, (config) => {
@@ -12,7 +14,7 @@ function withGoogleMapsApiKey(config) {
     const entry = {
       $: {
         'android:name': 'com.google.android.geo.API_KEY',
-        'android:value': process.env.GOOGLE_MAP_API ?? '',
+        'android:value': googleMapsApiKey,
       },
     };
     if (existing >= 0) {
@@ -80,7 +82,7 @@ module.exports = (config) =>
         ],
       ],
       extra: {
-        googleMapApi: process.env.GOOGLE_MAP_API,
+        googleMapApi: googleMapsApiKey,
       },
       experiments: {
         typedRoutes: true,

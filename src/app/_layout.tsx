@@ -1,3 +1,4 @@
+import "@/lib/fcm-background-handler";
 import React from "react";
 import { useColorScheme } from "react-native";
 
