@@ -1,4 +1,4 @@
-import { DeliveryItem } from "@/lib/firebase";
+import type { DeliveryItem } from "@/types/delivery";
 
 type LatLng = {
   lat: number;
@@ -134,6 +134,105 @@ async function fetchTravelMatrix(
   }
 
   return { durations, distances };
+}
+
+export function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
+  const points: { latitude: number; longitude: number }[] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let shift = 0;
+    let result = 0;
+    let byte: number;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    lat += result & 1 ? ~(result >> 1) : result >> 1;
+
+    shift = 0;
+    result = 0;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    lng += result & 1 ? ~(result >> 1) : result >> 1;
+
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+
+  return points;
+}
+
+type RoutePolylineParams = {
+  origin: LatLng;
+  destination: LatLng;
+  intermediates?: LatLng[];
+  apiKey: string;
+};
+
+export async function fetchRoutePolyline({
+  origin,
+  destination,
+  intermediates,
+  apiKey,
+}: RoutePolylineParams): Promise<{ latitude: number; longitude: number }[]> {
+  try {
+    const body: Record<string, unknown> = {
+      origin: {
+        location: { latLng: { latitude: origin.lat, longitude: origin.lng } },
+      },
+      destination: {
+        location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
+      },
+      travelMode: "DRIVE",
+      routingPreference: "TRAFFIC_AWARE",
+    };
+
+    if (intermediates?.length) {
+      body.intermediates = intermediates.map((point) => ({
+        location: { latLng: { latitude: point.lat, longitude: point.lng } },
+      }));
+    }
+
+    const response = await fetch(
+      "https://routes.googleapis.com/directions/v2:computeRoutes",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": "routes.polyline.encodedPolyline",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      routes?: { polyline?: { encodedPolyline?: string } }[];
+    };
+
+    const encodedPolyline = data.routes?.[0]?.polyline?.encodedPolyline;
+    if (!encodedPolyline) {
+      return [];
+    }
+
+    return decodePolyline(encodedPolyline);
+  } catch {
+    return [];
+  }
 }
 
 export async function optimizeDeliveryStops({

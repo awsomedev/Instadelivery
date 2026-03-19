@@ -1,247 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MapView, { LatLng, Marker, Polyline } from "react-native-maps";
-import Constants from "expo-constants";
-import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import MapView, { Marker, Polyline } from "react-native-maps";
 
-import { useAuth } from "@/hooks/use-auth";
-import {
-  DeliveryItem,
-  DeliveryStatus,
-  markDeliveryStatus,
-  subscribeToAssignedDeliveries,
-  updateDriverLocation,
-} from "@/lib/firebase";
-import { optimizeDeliveryStops, OptimizedStop } from "@/lib/route-optimizer";
-
-function formatStatus(status: DeliveryStatus) {
-  return status.replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
+import { DriverMarker, NextDeliveryMarker } from "@/components/map-markers";
+import { toMapCoordinate } from "@/lib/route-utils";
+import { useRouteFullscreenViewModel } from "@/view-models/use-route-fullscreen-view-model";
 
 export default function RouteFullScreen() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const mapRef = useRef<MapView | null>(null);
-  const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
-  const [driverLocation, setDriverLocation] = useState<LatLng | null>(null);
-  const [optimizedStops, setOptimizedStops] = useState<OptimizedStop[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const googleMapsApiKey =
-    process.env.EXPO_PUBLIC_GOOGLE_MAP_API ??
-    (Constants.expoConfig?.extra?.googleMapApi as string | undefined) ??
-    "";
-
-  useEffect(() => {
-    if (!user?.uid) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = subscribeToAssignedDeliveries(
-      user.uid,
-      (nextDeliveries) => {
-        setDeliveries(nextDeliveries);
-      },
-      (nextError) => {
-        setError(nextError.message);
-      },
-    );
-
-    return unsubscribe;
-  }, [user?.uid]);
-
-  useEffect(() => {
-    const userUid = user?.uid ?? "";
-    if (!userUid || Platform.OS === "web") {
-      setLoading(false);
-      return;
-    }
-
-    let mounted = true;
-    let locationWatcher: Location.LocationSubscription | null = null;
-
-    async function startTracking() {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.status !== "granted") {
-        setError("Location permission is required for route guidance.");
-        setLoading(false);
-        return;
-      }
-
-      const current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      if (mounted) {
-        const currentLocation = {
-          latitude: current.coords.latitude,
-          longitude: current.coords.longitude,
-        };
-        setDriverLocation(currentLocation);
-        await updateDriverLocation(userUid, {
-          lat: currentLocation.latitude,
-          lng: currentLocation.longitude,
-        });
-      }
-
-      locationWatcher = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.Balanced,
-          distanceInterval: 80,
-          timeInterval: 30000,
-        },
-        async (position) => {
-          const nextLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setDriverLocation(nextLocation);
-          try {
-            await updateDriverLocation(userUid, {
-              lat: nextLocation.latitude,
-              lng: nextLocation.longitude,
-            });
-          } catch {
-            return;
-          }
-        },
-      );
-    }
-
-    void startTracking().catch((nextError: unknown) => {
-      setError(nextError instanceof Error ? nextError.message : "Unable to load location.");
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      locationWatcher?.remove();
-    };
-  }, [user?.uid]);
-
-  const pendingStops = useMemo(
-    () =>
-      deliveries.filter(
-        (delivery) => delivery.status === "pending" || delivery.status === "in_progress",
-      ),
-    [deliveries],
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function optimize() {
-      if (!driverLocation) {
-        return;
-      }
-      if (!pendingStops.length) {
-        setOptimizedStops([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const nextStops = await optimizeDeliveryStops({
-          origin: { lat: driverLocation.latitude, lng: driverLocation.longitude },
-          stops: pendingStops,
-          apiKey: googleMapsApiKey,
-        });
-        if (!cancelled) {
-          setOptimizedStops(nextStops);
-          setLoading(false);
-        }
-      } catch (nextError) {
-        if (!cancelled) {
-          setError(nextError instanceof Error ? nextError.message : "Route optimization failed.");
-          setLoading(false);
-        }
-      }
-    }
-
-    void optimize();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [driverLocation, googleMapsApiKey, pendingStops]);
-
-  const nextStop = optimizedStops[0] ?? null;
-
-  useEffect(() => {
-    if (!mapRef.current || !driverLocation || !nextStop || Platform.OS === "web") {
-      return;
-    }
-
-    mapRef.current.fitToCoordinates(
-      [
-        driverLocation,
-        {
-          latitude: nextStop.delivery.coordinates.lat,
-          longitude: nextStop.delivery.coordinates.lng,
-        },
-      ],
-      {
-        edgePadding: { top: 80, bottom: 80, left: 60, right: 60 },
-        animated: true,
-      },
-    );
-  }, [driverLocation, nextStop]);
-
-  function openStatusPicker() {
-    if (!nextStop) {
-      return;
-    }
-
-    Alert.alert("Update Next Delivery", `Order ${nextStop.delivery.orderId}`, [
-      {
-        text: "Set In Progress",
-        onPress: () => void updateNextStop("in_progress"),
-      },
-      {
-        text: "Set Delivered",
-        onPress: () => void updateNextStop("delivered"),
-      },
-      {
-        text: "Set Failed",
-        onPress: () => void updateNextStop("failed"),
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-    ]);
-  }
-
-  async function updateNextStop(status: DeliveryStatus) {
-    if (!nextStop) {
-      return;
-    }
-
-    try {
-      setUpdating(true);
-      await markDeliveryStatus(nextStop.delivery.id, status);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Status update failed.");
-    } finally {
-      setUpdating(false);
-    }
-  }
+  const {
+    displayPolyline,
+    driverLocation,
+    error,
+    formatStatus,
+    goBack,
+    loading,
+    mapRef,
+    nextStop,
+    openStatusPicker,
+    updating,
+  } = useRouteFullscreenViewModel();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -260,27 +37,23 @@ export default function RouteFullScreen() {
             showsMyLocationButton
           >
             {driverLocation ? (
-              <Marker coordinate={driverLocation} title="Your Location" pinColor="#1D4ED8" />
+              <Marker coordinate={driverLocation} title="Your Location" anchor={{ x: 0.5, y: 0.5 }}>
+                <DriverMarker />
+              </Marker>
             ) : null}
             {nextStop ? (
               <Marker
-                coordinate={{
-                  latitude: nextStop.delivery.coordinates.lat,
-                  longitude: nextStop.delivery.coordinates.lng,
-                }}
+                coordinate={toMapCoordinate(nextStop.delivery.coordinates)}
                 title={nextStop.delivery.customerName}
                 description={nextStop.delivery.address}
-              />
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <NextDeliveryMarker />
+              </Marker>
             ) : null}
             {driverLocation && nextStop ? (
               <Polyline
-                coordinates={[
-                  driverLocation,
-                  {
-                    latitude: nextStop.delivery.coordinates.lat,
-                    longitude: nextStop.delivery.coordinates.lng,
-                  },
-                ]}
+                coordinates={displayPolyline}
                 strokeColor="#1D4ED8"
                 strokeWidth={4}
               />
@@ -294,7 +67,7 @@ export default function RouteFullScreen() {
 
         <View style={styles.topBar}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={goBack}
             style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
           >
             <Text style={styles.backLabel}>Back</Text>

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,46 +7,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from "expo-router";
-
 import { AppButton } from "@/components/ui/app-button";
 import { AppTextField } from "@/components/ui/app-text-field";
-import { signUpWithEmailPassword } from "@/lib/firebase";
+import { useSignupViewModel } from "@/view-models/use-signup-view-model";
 
 export default function SignupScreen() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const onSignUp = async () => {
-    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError("Email and password fields are required.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setError("");
-    setLoading(true);
-
-    try {
-      await signUpWithEmailPassword(email, password);
-    } catch (signupError) {
-      const message =
-        signupError instanceof Error
-          ? signupError.message
-          : "Unable to create account.";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    confirmPassword,
+    email,
+    error,
+    goToLogin,
+    loading,
+    onSignUp,
+    password,
+    setConfirmPassword,
+    setEmail,
+    setPassword,
+  } = useSignupViewModel();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -89,11 +65,7 @@ export default function SignupScreen() {
 
           <View style={styles.actions}>
             <AppButton label="Sign up" loading={loading} onPress={onSignUp} />
-            <AppButton
-              label="Back to login"
-              onPress={() => router.replace("/login" as never)}
-              variant="ghost"
-            />
+            <AppButton label="Back to login" onPress={goToLogin} variant="ghost" />
           </View>
         </View>
       </KeyboardAvoidingView>

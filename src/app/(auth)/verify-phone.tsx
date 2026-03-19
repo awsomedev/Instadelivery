@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,123 +16,33 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppButton } from "@/components/ui/app-button";
-import {
-  linkPhoneNumberWithCode,
-  reloadCurrentUser,
-  sendPhoneVerificationCode,
-} from "@/lib/firebase";
-
-const OTP_CELL_COUNT = 6;
-const COUNTRY_CODE = "+1";
+import { useVerifyPhoneViewModel } from "@/view-models/use-verify-phone-view-model";
 
 export default function VerifyPhoneScreen() {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationId, setVerificationId] = useState("");
-  const [code, setCode] = useState("");
-  const [sendingCode, setSendingCode] = useState(false);
-  const [verifyingCode, setVerifyingCode] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [error, setError] = useState("");
-  const ref = useBlurOnFulfill({ cellCount: OTP_CELL_COUNT, value: code });
+  const {
+    canVerify,
+    code,
+    countryCode,
+    displayPhone,
+    error,
+    isOtpStep,
+    onChangeNumber,
+    onResendCode,
+    onSendCode,
+    onVerifyCode,
+    otpCellCount,
+    phoneNumber,
+    sendingCode,
+    setCode,
+    setPhoneNumber,
+    statusMessage,
+    verifyingCode,
+  } = useVerifyPhoneViewModel();
+  const ref = useBlurOnFulfill({ cellCount: otpCellCount, value: code });
   const [codeFieldProps, getCellOnLayoutHandler] = useClearByFocusCell({
     setValue: setCode,
     value: code,
   });
-
-  const isOtpStep = Boolean(verificationId);
-  const canVerify = useMemo(
-    () => Boolean(verificationId) && code.length === OTP_CELL_COUNT,
-    [code.length, verificationId],
-  );
-
-  const onSendCode = async () => {
-    const digits = phoneNumber.replace(/\D/g, "");
-    if (!digits.length) {
-      setError("Phone number is required.");
-      return;
-    }
-
-    setError("");
-    setStatusMessage("");
-    setCode("");
-    setSendingCode(true);
-
-    try {
-      const fullNumber = `${COUNTRY_CODE}${digits}`;
-      const nextVerificationId = await sendPhoneVerificationCode(fullNumber);
-      setVerificationId(nextVerificationId);
-      setStatusMessage("Code sent. Enter the 6-digit OTP.");
-    } catch (sendCodeError) {
-      const message =
-        sendCodeError instanceof Error
-          ? sendCodeError.message
-          : "Failed to send OTP.";
-      setError(message);
-    } finally {
-      setSendingCode(false);
-    }
-  };
-
-  const onVerifyCode = async () => {
-    if (!canVerify) {
-      setError("Enter the full 6-digit code.");
-      return;
-    }
-
-    setError("");
-    setStatusMessage("");
-    setVerifyingCode(true);
-
-    try {
-      await linkPhoneNumberWithCode(verificationId, code);
-      await reloadCurrentUser();
-    } catch (verifyError) {
-      const message =
-        verifyError instanceof Error
-          ? verifyError.message
-          : "Failed to verify code.";
-      setError(message);
-    } finally {
-      setVerifyingCode(false);
-    }
-  };
-
-  const onChangeNumber = () => {
-    setPhoneNumber("");
-    setVerificationId("");
-    setCode("");
-    setError("");
-    setStatusMessage("");
-  };
-
-  const onResendCode = async () => {
-    const digits = phoneNumber.replace(/\D/g, "");
-    if (!digits.length) return;
-
-    setError("");
-    setStatusMessage("");
-    setCode("");
-    setSendingCode(true);
-
-    try {
-      const fullNumber = `${COUNTRY_CODE}${digits}`;
-      const nextVerificationId = await sendPhoneVerificationCode(fullNumber);
-      setVerificationId(nextVerificationId);
-      setStatusMessage("Code resent.");
-    } catch (sendCodeError) {
-      const message =
-        sendCodeError instanceof Error
-          ? sendCodeError.message
-          : "Failed to resend OTP.";
-      setError(message);
-    } finally {
-      setSendingCode(false);
-    }
-  };
-
-  const displayPhone = phoneNumber.replace(/\D/g, "").length
-    ? `${COUNTRY_CODE} ${phoneNumber.replace(/\D/g, "")}`
-    : "";
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -164,11 +73,11 @@ export default function VerifyPhoneScreen() {
                 </View>
               ) : (
                 <View style={styles.phoneInputWrapper}>
-                  <Text style={styles.phonePrefix}>{COUNTRY_CODE} </Text>
+                  <Text style={styles.phonePrefix}>{countryCode} </Text>
                   <TextInput
                     autoCapitalize="none"
                     keyboardType="phone-pad"
-                    onChangeText={(t) => setPhoneNumber(t.replace(/\D/g, ""))}
+                    onChangeText={setPhoneNumber}
                     placeholder="555 123 4567"
                     placeholderTextColor="#8A8A8E"
                     style={styles.phoneInput}
@@ -183,7 +92,7 @@ export default function VerifyPhoneScreen() {
                 <CodeField
                   {...codeFieldProps}
                   ref={ref}
-                  cellCount={OTP_CELL_COUNT}
+                  cellCount={otpCellCount}
                   keyboardType="number-pad"
                   onChangeText={setCode}
                   rootStyle={styles.codeFieldRoot}

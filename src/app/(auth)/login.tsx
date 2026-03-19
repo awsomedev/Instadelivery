@@ -1,39 +1,13 @@
-import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from "expo-router";
-
 import { AppButton } from "@/components/ui/app-button";
 import { AppTextField } from "@/components/ui/app-text-field";
-import { loginWithEmailPassword } from "@/lib/firebase";
+import { useLoginViewModel } from "@/view-models/use-login-view-model";
 
 export default function LoginScreen() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const onLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError("Email and password are required.");
-      return;
-    }
-
-    setError("");
-    setLoading(true);
-
-    try {
-      await loginWithEmailPassword(email, password);
-    } catch (loginError) {
-      const message =
-        loginError instanceof Error ? loginError.message : "Unable to sign in.";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { email, error, goToSignup, loading, onLogin, password, setEmail, setPassword } =
+    useLoginViewModel();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -67,11 +41,7 @@ export default function LoginScreen() {
 
           <View style={styles.actions}>
             <AppButton label="Log in" loading={loading} onPress={onLogin} />
-            <AppButton
-              label="Create account"
-              onPress={() => router.push("/signup" as never)}
-              variant="ghost"
-            />
+            <AppButton label="Create account" onPress={goToSignup} variant="ghost" />
           </View>
         </View>
       </KeyboardAvoidingView>
