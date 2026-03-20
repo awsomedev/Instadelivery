@@ -15,7 +15,7 @@ Cross-platform delivery driver app built with Expo ~54 and React Native, using R
 3. Start the app
 
    ```bash
-   npx expo start
+   bun run android
    ```
 
 ## Google Maps API
@@ -41,13 +41,17 @@ The app uses Firebase for:
 To set up Firebase, download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) from the Firebase console and place them in the `cred/` folder. They will be automatically picked up and copied into the `android/` and `ios/` directories during the build.
 
 Phone verification is currently in testing mode using mock Firebase phone numbers and verification codes. Real phone number verification can be enabled via the Firebase console.
+You can use these mobile numbers for registering the user and the OTP will always be `123456`.
+- 9999999999
+- 7777777777
+- 8888888888
 
 ## Back Office
 
-The back office dashboard is available at: https://example.com
+The back office dashboard is available at: https://instasupply-back-office-fg6rfgx3x-awsomedevs-projects.vercel.app/
 
 Use it to add deliveries, set up mock deliveries, view all registered drivers, and monitor delivery statuses. **Adding a delivery through the back office will trigger a push notification to the assigned driver.**
 
 Login credentials:
-- Email: `minute@gmail.com`
-- Password: `@212345six`
+- Email: `admin@gmail.com`
+- Password: `password@2123456`
