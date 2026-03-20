@@ -1,9 +1,12 @@
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useDeliverySubscription } from "@/hooks/use-delivery-subscription";
 import { markDeliveryStatus, signOutCurrentUser } from "@/lib/firebase";
+import { AppScreen } from "@/navigation/types";
+import type { AppStackParamList } from "@/navigation/types";
 import type { DeliveryItem, DeliveryStatus } from "@/types/delivery";
 import { formatDeliveryStatus } from "@/lib/route-utils";
 
@@ -25,7 +28,7 @@ function getNextStatus(status: DeliveryStatus): DeliveryStatus | null {
 }
 
 export function useDeliveriesViewModel() {
-  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { user } = useAuth();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -74,7 +77,7 @@ export function useDeliveriesViewModel() {
   }
 
   function openOptimizedRoute() {
-    router.push("/route");
+    navigation.navigate(AppScreen.Route);
   }
 
   function signOut() {

@@ -1,10 +1,13 @@
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
 
 import { loginWithEmailPassword } from "@/lib/firebase";
+import { AuthScreen } from "@/navigation/types";
+import type { AuthStackParamList } from "@/navigation/types";
 
 export function useLoginViewModel() {
-  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,7 @@ export function useLoginViewModel() {
   }
 
   function goToSignup() {
-    router.push("/signup" as never);
+    navigation.navigate(AuthScreen.Signup);
   }
 
   return {

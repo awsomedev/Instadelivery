@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import notifee, { AndroidImportance, EventType } from "@notifee/react-native";
-import { useRouter } from "expo-router";
 import {
   getInitialNotification,
   getMessaging,
@@ -16,13 +17,15 @@ import {
   saveDriverFcmToken,
   subscribeToFcmTokenRefresh,
 } from "@/lib/firebase";
+import { AppScreen } from "@/navigation/types";
+import type { AppStackParamList } from "@/navigation/types";
 
 type UseDriverNotificationsParams = {
   userUid?: string;
 };
 
 export function useDriverNotifications({ userUid }: UseDriverNotificationsParams) {
-  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   useEffect(() => {
     if (!userUid || Platform.OS === "web") {
@@ -63,7 +66,7 @@ export function useDriverNotifications({ userUid }: UseDriverNotificationsParams
 
     const unsubscribeNotifeeForeground = notifee.onForegroundEvent(({ type }) => {
       if (type === EventType.PRESS) {
-        router.push("/");
+        navigation.navigate(AppScreen.Deliveries);
       }
     });
 
@@ -86,12 +89,12 @@ export function useDriverNotifications({ userUid }: UseDriverNotificationsParams
     });
 
     const unsubscribeOpened = onNotificationOpenedApp(messaging, () => {
-      router.push("/");
+      navigation.navigate(AppScreen.Deliveries);
     });
 
     void getInitialNotification(messaging).then((notification) => {
       if (notification) {
-        router.push("/");
+        navigation.navigate(AppScreen.Deliveries);
       }
     });
 
@@ -101,5 +104,5 @@ export function useDriverNotifications({ userUid }: UseDriverNotificationsParams
       unsubscribeNotifeeForeground();
       unsubscribeOpened();
     };
-  }, [router, userUid]);
+  }, [navigation, userUid]);
 }

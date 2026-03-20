@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 import MapView from "react-native-maps";
@@ -21,7 +21,7 @@ import {
 import type { MapCoordinate } from "@/lib/route-utils";
 
 export function useRouteFullscreenViewModel() {
-  const router = useRouter();
+  const navigation = useNavigation();
   const { user } = useAuth();
   const mapRef = useRef<MapView | null>(null);
   const [optimizedStops, setOptimizedStops] = useState<OptimizedStop[]>([]);
@@ -167,7 +167,7 @@ export function useRouteFullscreenViewModel() {
   }
 
   function goBack() {
-    router.back();
+    navigation.goBack();
   }
 
   const displayPolyline = useMemo(

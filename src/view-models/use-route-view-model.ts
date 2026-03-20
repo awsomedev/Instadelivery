@@ -1,4 +1,5 @@
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 import type MapView from "react-native-maps";
@@ -13,9 +14,11 @@ import {
   getPolylineCoordinates,
   getPendingStops,
 } from "@/lib/route-utils";
+import { AppScreen } from "@/navigation/types";
+import type { AppStackParamList } from "@/navigation/types";
 
 export function useRouteViewModel() {
-  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { user } = useAuth();
   const mapRef = useRef<MapView | null>(null);
   const [updatingStopId, setUpdatingStopId] = useState<string | null>(null);
@@ -84,12 +87,12 @@ export function useRouteViewModel() {
   );
 
   const openFullScreenRoute = useCallback(() => {
-    router.push("/route-fullscreen");
-  }, [router]);
+    navigation.navigate(AppScreen.RouteFullscreen);
+  }, [navigation]);
 
   const goBack = useCallback(() => {
-    router.back();
-  }, [router]);
+    navigation.goBack();
+  }, [navigation]);
 
   return {
     driverLocation,
