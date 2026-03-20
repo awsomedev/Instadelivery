@@ -46,6 +46,10 @@ You can use these mobile numbers for registering the user and the OTP will alway
 - 7777777777
 - 8888888888
 
+Mock app login credentials:
+- Email: `sreeyesh@gmail.com`
+- Password: `password`
+
 ## Back Office
 
 The back office dashboard is available at: https://instasupply-back-office-fg6rfgx3x-awsomedevs-projects.vercel.app/
