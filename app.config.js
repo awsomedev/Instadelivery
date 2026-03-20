@@ -1,6 +1,5 @@
 const { withAndroidManifest } = require('@expo/config-plugins');
-const googleMapsApiKey =
-  process.env.EXPO_PUBLIC_GOOGLE_MAP_API ?? process.env.GOOGLE_MAP_API ?? '';
+const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAP_API ?? '';
 
 function withGoogleMapsApiKey(config) {
   return withAndroidManifest(config, (config) => {

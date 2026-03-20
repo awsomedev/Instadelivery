@@ -1,3 +1,6 @@
-import messaging from "@react-native-firebase/messaging";
+import {
+  getMessaging,
+  setBackgroundMessageHandler,
+} from "@react-native-firebase/messaging";
 
-messaging().setBackgroundMessageHandler(async () => {});
+setBackgroundMessageHandler(getMessaging(), async () => {});

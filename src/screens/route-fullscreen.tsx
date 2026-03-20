@@ -2,7 +2,7 @@ import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
-import { DriverMarker, NextDeliveryMarker } from "@/components/map-markers";
+import { DeliveryMarker, DriverMarker, NextDeliveryMarker } from "@/components/map-markers";
 import { toMapCoordinate } from "@/lib/route-utils";
 import { useRouteFullscreenViewModel } from "@/view-models/use-route-fullscreen-view-model";
 
@@ -16,6 +16,7 @@ export default function RouteFullScreen() {
     loading,
     mapRef,
     nextStop,
+    optimizedStops,
     openStatusPicker,
     updating,
   } = useRouteFullscreenViewModel();
@@ -41,16 +42,17 @@ export default function RouteFullScreen() {
                 <DriverMarker />
               </Marker>
             ) : null}
-            {nextStop ? (
+            {optimizedStops.map((stop, index) => (
               <Marker
-                coordinate={toMapCoordinate(nextStop.delivery.coordinates)}
-                title={nextStop.delivery.customerName}
-                description={nextStop.delivery.address}
+                key={stop.delivery.id}
+                coordinate={toMapCoordinate(stop.delivery.coordinates)}
+                title={`${index + 1}. ${stop.delivery.customerName}`}
+                description={stop.delivery.address}
                 anchor={{ x: 0.5, y: 0.5 }}
               >
-                <NextDeliveryMarker />
+                {index === 0 ? <NextDeliveryMarker /> : <DeliveryMarker />}
               </Marker>
-            ) : null}
+            ))}
             {driverLocation && nextStop ? (
               <Polyline
                 coordinates={displayPolyline}

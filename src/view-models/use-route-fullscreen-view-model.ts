@@ -184,6 +184,7 @@ export function useRouteFullscreenViewModel() {
     loading,
     mapRef,
     nextStop,
+    optimizedStops,
     openStatusPicker,
     updating,
   };

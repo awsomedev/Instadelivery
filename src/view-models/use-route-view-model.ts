@@ -42,8 +42,8 @@ export function useRouteViewModel() {
   });
 
   const polylineCoords = useMemo(
-    () => getPolylineCoordinates(driverLocation, optimizedStops),
-    [driverLocation, optimizedStops],
+    () => getPolylineCoordinates(driverLocation, optimizedStops, routePolyline),
+    [driverLocation, optimizedStops, routePolyline],
   );
 
   useEffect(() => {
