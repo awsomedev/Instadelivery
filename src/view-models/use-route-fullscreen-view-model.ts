@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Linking, Platform } from "react-native";
 import MapView from "react-native-maps";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -170,6 +170,19 @@ export function useRouteFullscreenViewModel() {
     navigation.goBack();
   }
 
+  const openInGoogleMaps = useCallback(async () => {
+    if (!driverLocation || !nextStop) return;
+
+    const origin = `${driverLocation.latitude},${driverLocation.longitude}`;
+    const destination = `${nextStop.delivery.coordinates.lat},${nextStop.delivery.coordinates.lng}`;
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    }
+  }, [driverLocation, nextStop]);
+
   const displayPolyline = useMemo(
     () => getRoutePolylineCoordinates({ driverLocation, nextStop, routePolyline }),
     [driverLocation, nextStop, routePolyline],
@@ -184,6 +197,7 @@ export function useRouteFullscreenViewModel() {
     loading,
     mapRef,
     nextStop,
+    openInGoogleMaps,
     optimizedStops,
     openStatusPicker,
     updating,

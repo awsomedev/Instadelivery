@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useMemo } from "react";
 
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/auth-error";
 import {
   linkPhoneNumberWithCode,
   reloadCurrentUser,
   sendPhoneVerificationCode,
+  signOutCurrentUser,
 } from "@/lib/firebase";
 
 const otpCellCount = 6;
@@ -44,8 +47,12 @@ export function useVerifyPhoneViewModel() {
       setVerificationId(nextVerificationId);
       setStatusMessage("Code sent. Enter the 6-digit OTP.");
     } catch (sendCodeError) {
-      const message = sendCodeError instanceof Error ? sendCodeError.message : "Failed to send OTP.";
-      setError(message);
+      setError(
+        getFirebaseAuthErrorMessage(
+          sendCodeError,
+          "Unable to send the verification code right now. Please try again.",
+        ),
+      );
     } finally {
       setSendingCode(false);
     }
@@ -65,8 +72,12 @@ export function useVerifyPhoneViewModel() {
       await linkPhoneNumberWithCode(verificationId, code);
       await reloadCurrentUser();
     } catch (verifyError) {
-      const message = verifyError instanceof Error ? verifyError.message : "Failed to verify code.";
-      setError(message);
+      setError(
+        getFirebaseAuthErrorMessage(
+          verifyError,
+          "Unable to verify the code right now. Please try again.",
+        ),
+      );
     } finally {
       setVerifyingCode(false);
     }
@@ -96,11 +107,19 @@ export function useVerifyPhoneViewModel() {
       setVerificationId(nextVerificationId);
       setStatusMessage("Code resent.");
     } catch (sendCodeError) {
-      const message = sendCodeError instanceof Error ? sendCodeError.message : "Failed to resend OTP.";
-      setError(message);
+      setError(
+        getFirebaseAuthErrorMessage(
+          sendCodeError,
+          "Unable to resend the verification code right now. Please try again.",
+        ),
+      );
     } finally {
       setSendingCode(false);
     }
+  }
+
+  async function onSignOut() {
+    await signOutCurrentUser();
   }
 
   return {
@@ -113,6 +132,7 @@ export function useVerifyPhoneViewModel() {
     onChangeNumber,
     onResendCode,
     onSendCode,
+    onSignOut,
     onVerifyCode,
     otpCellCount,
     phoneNumber,

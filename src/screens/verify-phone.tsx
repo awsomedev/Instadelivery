@@ -26,6 +26,7 @@ export default function VerifyPhoneScreen() {
     displayPhone,
     error,
     isOtpStep,
+    onSignOut,
     onChangeNumber,
     onResendCode,
     onSendCode,
@@ -143,6 +144,9 @@ export default function VerifyPhoneScreen() {
                 onPress={onSendCode}
               />
             )}
+            <Pressable onPress={onSignOut} style={styles.signOutButton}>
+              <Text style={styles.signOutText}>Sign out</Text>
+            </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -241,6 +245,15 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#FFFFFF",
     flex: 1,
+  },
+  signOutButton: {
+    alignSelf: "center",
+    paddingVertical: 8,
+  },
+  signOutText: {
+    color: "#8A8A8E",
+    fontSize: 14,
+    fontWeight: "500",
   },
   status: {
     color: "#2B8A3E",

@@ -3,6 +3,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
 
 import { signUpWithEmailPassword } from "@/lib/firebase";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/auth-error";
 import { AuthScreen } from "@/navigation/types";
 import type { AuthStackParamList } from "@/navigation/types";
 
@@ -30,9 +31,15 @@ export function useSignupViewModel() {
 
     try {
       await signUpWithEmailPassword(email, password);
+      navigation.replace(AuthScreen.VerifyPhone);
+      return;
     } catch (signupError) {
-      const message = signupError instanceof Error ? signupError.message : "Unable to create account.";
-      setError(message);
+      setError(
+        getFirebaseAuthErrorMessage(
+          signupError,
+          "Unable to create your account right now. Please try again.",
+        ),
+      );
     } finally {
       setLoading(false);
     }

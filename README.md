@@ -1,56 +1,53 @@
-# Welcome to your Expo app 👋
+# InstaDelivery
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Cross-platform delivery driver app built with Expo ~54 and React Native, using React Navigation for routing.
 
-## Get started
+## Setup
 
 1. Install dependencies
 
    ```bash
-   npm install
+   bun install
    ```
 
-2. Start the app
+2. Copy `.env.example` to `.env` and add your Google Maps API key
+
+3. Start the app
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Google Maps API
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+You need a Google Cloud API key with the following APIs enabled:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Maps SDK for Android
+- Maps SDK for iOS
+- Routes API
+- Places API
 
-## Get a fresh project
+Set the key in your `.env` file as `EXPO_PUBLIC_GOOGLE_MAP_API`.
 
-When you're ready, run:
+## Firebase
 
-```bash
-npm run reset-project
-```
+The app uses Firebase for:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Authentication** — Email/password sign up and mobile phone verification
+- **Firestore** — Real-time delivery data and driver location storage
+- **Cloud Messaging (FCM)** — Push notifications to drivers
+- **Cloud Functions** — Triggers a notification whenever a new delivery document is created for a driver
 
-### Other setup steps
+To set up Firebase, download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) from the Firebase console and place them in the `cred/` folder. They will be automatically picked up and copied into the `android/` and `ios/` directories during the build.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Phone verification is currently in testing mode using mock Firebase phone numbers and verification codes. Real phone number verification can be enabled via the Firebase console.
 
-## Learn more
+## Back Office
 
-To learn more about developing your project with Expo, look at the following resources:
+The back office dashboard is available at: https://example.com
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Use it to add deliveries, set up mock deliveries, view all registered drivers, and monitor delivery statuses. **Adding a delivery through the back office will trigger a push notification to the assigned driver.**
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Login credentials:
+- Email: `minute@gmail.com`
+- Password: `@212345six`

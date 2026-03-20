@@ -1,7 +1,9 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useEffect } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useDriverNotifications } from "@/hooks/use-driver-notifications";
+import { createDriverProfile } from "@/lib/firebase";
 import DeliveriesScreen from "@/screens/deliveries";
 import RouteScreen from "@/screens/route";
 import RouteFullscreenScreen from "@/screens/route-fullscreen";
@@ -13,6 +15,15 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 export function AppStack() {
   const { user } = useAuth();
   useDriverNotifications({ userUid: user?.uid });
+
+  useEffect(() => {
+    if (!user) return;
+    void createDriverProfile({
+      uid: user.uid,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    });
+  }, [user]);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

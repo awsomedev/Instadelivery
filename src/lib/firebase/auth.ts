@@ -1,9 +1,12 @@
 import {
   createUserWithEmailAndPassword,
+  getIdToken,
   getAuth,
+  linkWithCredential,
   onIdTokenChanged,
   PhoneAuthProvider,
   PhoneAuthState,
+  reload,
   signInWithEmailAndPassword,
   signOut,
   verifyPhoneNumber,
@@ -91,8 +94,8 @@ export async function linkPhoneNumberWithCode(
 
   const credential = PhoneAuthProvider.credential(verificationId, code.trim());
 
-  const linkedUserCredential = await currentUser.linkWithCredential(credential);
-  await linkedUserCredential.user.reload();
+  const linkedUserCredential = await linkWithCredential(currentUser, credential);
+  await reload(linkedUserCredential.user);
   return linkedUserCredential.user;
 }
 
@@ -103,7 +106,7 @@ export async function reloadCurrentUser() {
     return null;
   }
 
-  await currentUser.reload();
-  await currentUser.getIdToken(true);
+  await reload(currentUser);
+  await getIdToken(currentUser, true);
   return getAuth().currentUser;
 }

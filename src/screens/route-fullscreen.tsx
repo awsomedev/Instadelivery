@@ -16,6 +16,7 @@ export default function RouteFullScreen() {
     loading,
     mapRef,
     nextStop,
+    openInGoogleMaps,
     optimizedStops,
     openStatusPicker,
     updating,
@@ -92,19 +93,30 @@ export default function RouteFullScreen() {
               <Text style={styles.panelText}>
                 Current status: {formatStatus(nextStop.delivery.status)}
               </Text>
-              <Pressable
-                disabled={updating}
-                onPress={openStatusPicker}
-                style={({ pressed }) => [
-                  styles.statusButton,
-                  pressed ? styles.pressed : null,
-                  updating ? styles.disabled : null,
-                ]}
-              >
-                <Text style={styles.statusButtonLabel}>
-                  {updating ? "Updating..." : "Update Next Stop Status"}
-                </Text>
-              </Pressable>
+              <View style={styles.buttonRow}>
+                <Pressable
+                  onPress={() => void openInGoogleMaps()}
+                  style={({ pressed }) => [
+                    styles.navigateButton,
+                    pressed ? styles.pressed : null,
+                  ]}
+                >
+                  <Text style={styles.navigateButtonLabel}>Navigate</Text>
+                </Pressable>
+                <Pressable
+                  disabled={updating}
+                  onPress={openStatusPicker}
+                  style={({ pressed }) => [
+                    styles.statusButton,
+                    pressed ? styles.pressed : null,
+                    updating ? styles.disabled : null,
+                  ]}
+                >
+                  <Text style={styles.statusButtonLabel}>
+                    {updating ? "Updating..." : "Update Status"}
+                  </Text>
+                </Pressable>
+              </View>
             </>
           ) : null}
           {!loading && !error && !nextStop ? (
@@ -180,12 +192,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     flex: 1,
   },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+  },
+  navigateButton: {
+    alignItems: "center",
+    backgroundColor: "#0F172A",
+    borderRadius: 12,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: 12,
+  },
+  navigateButtonLabel: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
   statusButton: {
     alignItems: "center",
     backgroundColor: "#2563EB",
     borderRadius: 12,
+    flex: 1,
     justifyContent: "center",
-    marginTop: 8,
     minHeight: 48,
     paddingHorizontal: 12,
   },

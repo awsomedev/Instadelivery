@@ -3,6 +3,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
 
 import { loginWithEmailPassword } from "@/lib/firebase";
+import { getFirebaseAuthErrorMessage } from "@/lib/firebase/auth-error";
 import { AuthScreen } from "@/navigation/types";
 import type { AuthStackParamList } from "@/navigation/types";
 
@@ -25,8 +26,12 @@ export function useLoginViewModel() {
     try {
       await loginWithEmailPassword(email, password);
     } catch (loginError) {
-      const message = loginError instanceof Error ? loginError.message : "Unable to sign in.";
-      setError(message);
+      setError(
+        getFirebaseAuthErrorMessage(
+          loginError,
+          "Unable to log in right now. Please try again.",
+        ),
+      );
     } finally {
       setLoading(false);
     }

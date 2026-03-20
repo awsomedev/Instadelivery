@@ -10,7 +10,7 @@ export {
 
 export { subscribeToAssignedDeliveries, markDeliveryStatus } from "./deliveries";
 
-export { saveDriverFcmToken, updateDriverLocation } from "./driver";
+export { createDriverProfile, saveDriverFcmToken, updateDriverLocation } from "./driver";
 
 export {
   getFcmDeviceToken,

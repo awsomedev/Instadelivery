@@ -7,6 +7,24 @@ import {
 
 import type { DeliveryCoordinates } from "@/types/delivery";
 
+export async function createDriverProfile(user: {
+  uid: string;
+  email: string | null;
+  phoneNumber: string | null;
+}) {
+  const userRef = doc(getFirestore(), "users", user.uid);
+  await setDoc(
+    userRef,
+    {
+      email: user.email ?? null,
+      phoneNumber: user.phoneNumber ?? null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
 export async function saveDriverFcmToken(
   driverUid: string | undefined,
   token: string,
