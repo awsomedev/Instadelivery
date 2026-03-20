@@ -12,7 +12,13 @@ Cross-platform delivery driver app built with Expo ~54 and React Native, using R
 
 2. Copy `.env.example` to `.env` and add your Google Maps API key
 
-3. Start the app
+3. Prebuild the Android native project
+
+   ```bash
+   npx expo prebuild --platform android
+   ```
+
+4. Start the app
 
    ```bash
    bun run android
